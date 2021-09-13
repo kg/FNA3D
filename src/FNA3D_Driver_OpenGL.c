@@ -179,7 +179,7 @@ typedef struct OpenGLRenderer /* Cast from FNA3D_Renderer* */
 	uint8_t supports_s3tc;
 	uint8_t supports_dxt1;
 	uint8_t supports_anisotropic_filtering;
-	uint8_t supports_srgb_framebuffer;
+	uint8_t supports_srgb_rendertarget;
 	int32_t maxMultiSampleCount;
 	int32_t maxMultiSampleCountFormat[21];
 	int32_t windowSampleCount;
@@ -5193,10 +5193,10 @@ static uint8_t OPENGL_SupportsNoOverwrite(FNA3D_Renderer *driverData)
 	return 0;
 }
 
-static uint8_t OPENGL_SupportsSRGBFrameBuffer(FNA3D_Renderer *driverData)
+static uint8_t OPENGL_SupportsSRGBRenderTargets(FNA3D_Renderer *driverData)
 {
 	OpenGLRenderer *renderer = (OpenGLRenderer*) driverData;
-	return renderer->supports_srgb_framebuffer;
+	return renderer->supports_srgb_rendertarget;
 }
 
 static void OPENGL_GetMaxTextureSlots(
@@ -5569,7 +5569,7 @@ static inline void CheckExtensions(
 	uint8_t *supportsS3tc,
 	uint8_t *supportsDxt1,
 	uint8_t *supportsAnisotropicFiltering,
-	uint8_t *supportsSRGBFrameBuffer
+	uint8_t *SupportsSRGBRenderTargets
 ) {
 	uint8_t s3tc = (
 		SDL_strstr(ext, "GL_EXT_texture_compression_s3tc") ||
@@ -5600,7 +5600,7 @@ static inline void CheckExtensions(
 
 	if (srgbFrameBuffer)
 	{
-		*SupportsSRGBFrameBuffer = 1;
+		*SupportsSRGBRenderTargets = 1;
 	}
 }
 
@@ -5934,7 +5934,7 @@ FNA3D_Device* OPENGL_CreateDevice(
 	renderer->supports_s3tc = 0;
 	renderer->supports_dxt1 = 0;
 	renderer->supports_anisotropic_filtering = 0;
-	renderer->supports_srgb_framebuffer = 0;
+	renderer->supports_srgb_rendertarget = 0;
 	if (renderer->useCoreProfile)
 	{
 		renderer->glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
@@ -5945,10 +5945,10 @@ FNA3D_Device* OPENGL_CreateDevice(
 				&renderer->supports_s3tc,
 				&renderer->supports_dxt1,
 				&renderer->supports_anisotropic_filtering,
-				&renderer->supports_srgb_framebuffer
+				&renderer->supports_srgb_rendertarget
 			);
 
-			if (renderer->supports_s3tc && renderer->supports_dxt1 && renderer->supports_srgb_framebuffer)
+			if (renderer->supports_s3tc && renderer->supports_dxt1 && renderer->supports_srgb_rendertarget)
 			{
 				/* No need to look further. */
 				break;
@@ -5962,7 +5962,7 @@ FNA3D_Device* OPENGL_CreateDevice(
 			&renderer->supports_s3tc,
 			&renderer->supports_dxt1,
 			&renderer->supports_anisotropic_filtering,
-			&renderer->supports_srgb_framebuffer
+			&renderer->supports_srgb_rendertarget
 		);
 	}
 

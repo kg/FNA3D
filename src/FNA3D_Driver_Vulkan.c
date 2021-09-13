@@ -1433,6 +1433,7 @@ typedef struct VulkanRenderer
 	uint8_t supportsDxt1;
 	uint8_t supportsS3tc;
 	uint8_t supportsDebugUtils;
+	uint8_t supportsSRGBRenderTarget;
 	uint8_t debugMode;
 	VulkanExtensions supports;
 
@@ -11505,9 +11506,10 @@ static uint8_t VULKAN_SupportsNoOverwrite(FNA3D_Renderer *driverData)
 	return 1;
 }
 
-static uint8_t VULKAN_SupportsSRGBFrameBuffer(FNA3D_Renderer *driverData)
+static uint8_t VULKAN_SupportsSRGBRenderTargets(FNA3D_Renderer *driverData)
 {
-	return 1;
+	VulkanRenderer *renderer = (VulkanRenderer*) driverData;
+	return renderer->supportsSRGBRenderTarget;
 }
 
 static void VULKAN_GetMaxTextureSlots(
@@ -11781,6 +11783,9 @@ static FNA3D_Device* VULKAN_CreateDevice(
 
 	/* Variables: Check for DXT1/S3TC Support */
 	VkFormatProperties formatPropsBC1, formatPropsBC2, formatPropsBC3;
+
+	/* Variables: Check for SRGB Render Target Support */
+	VkFormatProperties formatPropsSrgbRT;
 
 	/* Variables: Create query pool */
 	VkQueryPoolCreateInfo queryPoolCreateInfo;
@@ -12375,6 +12380,12 @@ static FNA3D_Device* VULKAN_CreateDevice(
 		&formatPropsBC3
 	);
 
+		renderer->vkGetPhysicalDeviceFormatProperties(
+		renderer->physicalDevice,
+		XNAToVK_SurfaceFormat[FNA3D_SURFACEFORMAT_COLORSRGB_EXT],
+		&formatPropsSrgbRT
+	);
+
 	#define SUPPORTED_FORMAT(fmt) \
 		((fmt.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) && \
 		(fmt.optimalTilingFeatures & VK_FORMAT_FEATURE_TRANSFER_DST_BIT))
@@ -12382,6 +12393,10 @@ static FNA3D_Device* VULKAN_CreateDevice(
 	renderer->supportsS3tc = (
 		SUPPORTED_FORMAT(formatPropsBC2) ||
 		SUPPORTED_FORMAT(formatPropsBC3)
+	);
+
+	renderer->supportsSRGBRenderTarget = (
+		SUPPORTED_FORMAT(formatPropsSrgbRT) && (formatPropsSrgbRT.optimalTilingFeatures & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)
 	);
 
 	/*

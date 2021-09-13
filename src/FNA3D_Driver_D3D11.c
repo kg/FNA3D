@@ -227,6 +227,7 @@ typedef struct D3D11Renderer /* Cast FNA3D_Renderer* to this! */
 	uint8_t debugMode;
 	uint32_t supportsDxt1;
 	uint32_t supportsS3tc;
+	uint8_t supportsSRGBRenderTarget;
 	int32_t maxMultiSampleCount;
 	D3D_FEATURE_LEVEL featureLevel;
 
@@ -4586,9 +4587,10 @@ static uint8_t D3D11_SupportsNoOverwrite(FNA3D_Renderer *driverData)
 	return 1;
 }
 
-static uint8_t D3D11_SupportsSRGBFrameBuffer(FNA3D_Renderer *driverData)
+static uint8_t D3D11_SupportsSRGBRenderTargets(FNA3D_Renderer *driverData)
 {
-	return 1;
+	D3D11Renderer *renderer = (D3D11Renderer*) driverData;
+	return renderer->supportsSRGBRenderTarget;
 }
 
 static void D3D11_GetMaxTextureSlots(
@@ -4945,7 +4947,7 @@ static FNA3D_Device* D3D11_CreateDevice(
 		D3D_FEATURE_LEVEL_10_1,
 		D3D_FEATURE_LEVEL_10_0
 	};
-	uint32_t flags, supportsDxt3, supportsDxt5;
+	uint32_t flags, supportsDxt3, supportsDxt5, supportsSrgb;
 	int32_t i;
 	HRESULT res;
 
@@ -5038,6 +5040,12 @@ try_create_device:
 		&supportsDxt5
 	);
 	renderer->supportsS3tc = (supportsDxt3 || supportsDxt5);
+	ID3D11Device_CheckFormatSupport(
+		renderer->device,
+		XNAToD3D_TextureFormat[FNA3D_SURFACEFORMAT_COLORSRGB_EXT],
+		&supportsSrgb
+	);
+	renderer->supportsSRGBRenderTarget = supportsSrgb;
 
 	/* Initialize MojoShader context */
 	MOJOSHADER_d3d11CreateContext(
