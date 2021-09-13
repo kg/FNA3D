@@ -2580,7 +2580,7 @@ static void OPENGL_SetRenderTargets(
 			{
 				renderer->attachmentTypes[i] = GL_TEXTURE_CUBE_MAP_POSITIVE_X + rt->cube.face;
 			}
-			isSrgb |= (((OpenGLTexture*)rt->colorBuffer)->format == FNA3D_SURFACEFORMAT_COLORSRGB_EXT);
+			isSrgb |= (((OpenGLTexture*) rt->texture)->format == FNA3D_SURFACEFORMAT_COLORSRGB_EXT);
 		}
 	}
 
